@@ -87,7 +87,7 @@ cat > /tmp/outbounds.json <<'JSONEOF'
       "security": "reality",
       "xhttpSettings": {
         "path": "/",
-        "mode": "auto",
+        "mode": "stream-up",
         "xPaddingBytes": "100-1000",
         "seqPlacement": "path",
         "scMaxEachPostBytes": "2000000",
