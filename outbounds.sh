@@ -9,31 +9,8 @@ if [ ! -f /etc/x-ui/x-ui.db ]; then
     exit 1
 fi
 
-echo -e "${YELLOW}Обновляем шаблон Xray в базе данных...${NC}"
-
-python3 << 'PYEOF'
-import sqlite3, json, sys
-
-db_path = '/etc/x-ui/x-ui.db'
-conn = sqlite3.connect(db_path)
-c = conn.cursor()
-
-# Получаем текущий шаблон
-c.execute("SELECT value FROM settings WHERE key='xrayTemplateConfig'")
-row = c.fetchone()
-
-if not row:
-    print("Ошибка: Ключ xrayTemplateConfig не найден в базе.")
-    sys.exit(1)
-
-try:
-    current_config = json.loads(row[0])
-except json.JSONDecodeError:
-    print("Ошибка: В базе битый JSON.")
-    sys.exit(1)
-
-# ТВОЙ МАССИВ АУТБАУНДОВ КАК СТРОКА (чтобы не было проблем с true/false)
-outbounds_json_str = """
+echo -e "${YELLOW}Создаем временный JSON-файл с аутбаундами...${NC}"
+cat > /tmp/outbounds.json <<'JSONEOF'
 [
   {
     "tag": "direct",
@@ -246,9 +223,33 @@ outbounds_json_str = """
     }
   }
 ]
-"""
+JSONEOF
 
-new_outbounds = json.loads(outbounds_json_str)
+echo -e "${YELLOW}Обновляем шаблон Xray в базе данных...${NC}"
+
+python3 << 'PYEOF'
+import sqlite3, json, sys
+
+db_path = '/etc/x-ui/x-ui.db'
+conn = sqlite3.connect(db_path)
+c = conn.cursor()
+
+c.execute("SELECT value FROM settings WHERE key='xrayTemplateConfig'")
+row = c.fetchone()
+
+if not row:
+    print("Ошибка: Ключ xrayTemplateConfig не найден в базе.")
+    sys.exit(1)
+
+try:
+    current_config = json.loads(row[0])
+except json.JSONDecodeError:
+    print("Ошибка: В базе битый JSON.")
+    sys.exit(1)
+
+# Читаем чистый JSON из файла
+with open('/tmp/outbounds.json', 'r', encoding='utf-8') as f:
+    new_outbounds = json.load(f)
 
 # Подменяем аутбаунды
 current_config["outbounds"] = new_outbounds
@@ -260,6 +261,8 @@ conn.commit()
 conn.close()
 print("\033[0;32mТвои аутбаунды успешно вшиты в базу! \033[0m")
 PYEOF
+
+rm -f /tmp/outbounds.json
 
 echo -e "${YELLOW}Перезапускаем панель и Xray...${NC}"
 systemctl restart x-ui
