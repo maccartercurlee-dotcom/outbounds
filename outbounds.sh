@@ -73,7 +73,6 @@ cat > /tmp/outbounds.json <<'JSONEOF'
     }
   },
   {
-    "tag": "FL201-FL201",
     "protocol": "vless",
     "settings": {
       "address": "201.58.176.53",
@@ -82,16 +81,15 @@ cat > /tmp/outbounds.json <<'JSONEOF'
       "flow": "",
       "encryption": "mlkem768x25519plus.random.0rtt.USFBBkiJm59iHS3Kaci8jihrteYpmVS3oO6t4jav6ns"
     },
+    "tag": "FL201-FL201",
     "streamSettings": {
       "network": "xhttp",
       "security": "reality",
       "xhttpSettings": {
         "path": "/",
-        "mode": "stream-up",
+        "mode": "stream-one",
         "xPaddingBytes": "100-1000",
         "seqPlacement": "path",
-        "scMaxEachPostBytes": "2000000",
-        "scMinPostsIntervalMs": "10-20",
         "xmux": {
           "maxConcurrency": "16-32",
           "maxConnections": 0,
@@ -105,7 +103,7 @@ cat > /tmp/outbounds.json <<'JSONEOF'
         "publicKey": "0M5FsK0WSAlzHTCdHHE6WrK7rJSNOMmA8cjdRBpMh2o",
         "fingerprint": "chrome",
         "serverName": "kielibuusti.fi",
-        "shortId": "90552c51",
+        "shortId": "d344c2e6df",
         "spiderX": "/35df68c75dc4754",
         "mldsa65Verify": ""
       }
