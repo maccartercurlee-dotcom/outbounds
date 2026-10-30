@@ -32,8 +32,9 @@ except json.JSONDecodeError:
     print("Ошибка: В базе битый JSON.")
     sys.exit(1)
 
-# ТВОЙ МАССИВ АУТБАУНДОВ
-new_outbounds = [
+# ТВОЙ МАССИВ АУТБАУНДОВ КАК СТРОКА (чтобы не было проблем с true/false)
+outbounds_json_str = """
+[
   {
     "tag": "direct",
     "protocol": "freedom",
@@ -245,6 +246,9 @@ new_outbounds = [
     }
   }
 ]
+"""
+
+new_outbounds = json.loads(outbounds_json_str)
 
 # Подменяем аутбаунды
 current_config["outbounds"] = new_outbounds
