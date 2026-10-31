@@ -2,38 +2,16 @@
 set -e
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 
-echo -e "${GREEN}=== НАСТРОЙКА КАСТОМНЫХ АУТБАУНДОВ ===${NC}"
+echo -e "${GREEN}=== ПОЛНАЯ ЗАМЕНА АУТБАУНДОВ ===${NC}"
 
 if [ ! -f /etc/x-ui/x-ui.db ]; then
     echo -e "${RED}Ошибка: База данных /etc/x-ui/x-ui.db не найдена!${NC}"
     exit 1
 fi
 
-echo -e "${YELLOW}Создаем временный JSON-файл с аутбаундами...${NC}"
+echo -e "${YELLOW}Создаем временный JSON-файл с твоими аутбаундами...${NC}"
 cat > /tmp/outbounds.json <<'JSONEOF'
 [
-  {
-    "tag": "direct",
-    "protocol": "freedom",
-    "settings": {
-      "finalRules": [
-        {
-          "action": "block",
-          "ip": [
-            "geoip:private"
-          ]
-        },
-        {
-          "action": "allow"
-        }
-      ]
-    }
-  },
-  {
-    "tag": "blocked",
-    "protocol": "blackhole",
-    "settings": {}
-  },
   {
     "tag": "Ge",
     "protocol": "vless",
@@ -49,7 +27,7 @@ cat > /tmp/outbounds.json <<'JSONEOF'
       "security": "reality",
       "xhttpSettings": {
         "path": "/",
-        "mode": "stream-up",
+        "mode": "stream-one",
         "xPaddingBytes": "100-1000",
         "sessionIDTable": "Base62",
         "sessionIDLength": "8-16",
@@ -64,15 +42,16 @@ cat > /tmp/outbounds.json <<'JSONEOF'
       },
       "realitySettings": {
         "publicKey": "55_0QqYuVu0IxTt05HRMZIrpkcdaJ2d22xBQry6y3FE",
-        "fingerprint": "chrome",
+        "fingerprint": "firefox",
         "serverName": "agema1979.uk",
-        "shortId": "5ddd998b",
+        "shortId": "eaf0f6e71c8e",
         "spiderX": "/9cb0cdf556811b5",
         "mldsa65Verify": ""
       }
     }
   },
   {
+    "tag": "FL201-FL201",
     "protocol": "vless",
     "settings": {
       "address": "201.58.176.53",
@@ -81,7 +60,6 @@ cat > /tmp/outbounds.json <<'JSONEOF'
       "flow": "",
       "encryption": "mlkem768x25519plus.random.0rtt.USFBBkiJm59iHS3Kaci8jihrteYpmVS3oO6t4jav6ns"
     },
-    "tag": "FL201-FL201",
     "streamSettings": {
       "network": "xhttp",
       "security": "reality",
@@ -219,11 +197,21 @@ cat > /tmp/outbounds.json <<'JSONEOF'
         "mldsa65Verify": ""
       }
     }
+  },
+  {
+    "tag": "direct",
+    "protocol": "freedom",
+    "settings": {}
+  },
+  {
+    "tag": "blocked",
+    "protocol": "blackhole",
+    "settings": {}
   }
 ]
 JSONEOF
 
-echo -e "${YELLOW}Обновляем шаблон Xray в базе данных...${NC}"
+echo -e "${YELLOW}Полностью заменяем аутбаунды в xrayTemplateConfig...${NC}"
 
 python3 << 'PYEOF'
 import sqlite3, json, sys
@@ -245,19 +233,17 @@ except json.JSONDecodeError:
     print("Ошибка: В базе битый JSON.")
     sys.exit(1)
 
-# Читаем чистый JSON из файла
 with open('/tmp/outbounds.json', 'r', encoding='utf-8') as f:
     new_outbounds = json.load(f)
 
-# Подменяем аутбаунды
+# Жестко перезаписываем массив outbounds
 current_config["outbounds"] = new_outbounds
 
-# Сохраняем в БД
 new_json = json.dumps(current_config, ensure_ascii=False)
 c.execute("UPDATE settings SET value=? WHERE key='xrayTemplateConfig'", (new_json,))
 conn.commit()
 conn.close()
-print("\033[0;32mТвои аутбаунды успешно вшиты в базу! \033[0m")
+print("\033[0;32mАутбаунды успешно заменены на твои! \033[0m")
 PYEOF
 
 rm -f /tmp/outbounds.json
