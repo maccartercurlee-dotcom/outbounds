@@ -2,19 +2,6 @@
 #
 # optimize-xui.sh — системная оптимизация VPS под Hysteria 2 / QUIC в 3x-ui
 #
-# Что делает:
-#   1. Увеличивает UDP-буферы ядра до 16 MB (нужно для высоких скоростей QUIC)
-#   2. Включает BBR + fq на уровне ядра
-#   3. Повышает приоритет x-ui.service (Nice=-5) — снижает джиттер
-#
-# Поддерживаемые ОС: Debian 11/12, Ubuntu 20.04/22.04/24.04, AlmaLinux/Rocky 8/9
-# Требования: root, установленный 3x-ui
-#
-# Использование:
-#   sudo bash optimize-xui.sh
-#   sudo bash optimize-xui.sh --nice -10
-#   sudo bash optimize-xui.sh --nice 0 --no-restart
-#
 set -euo pipefail
 
 # ---------- Параметры по умолчанию ----------
@@ -56,7 +43,8 @@ done
 command -v systemctl >/dev/null || die "systemd не найден — скрипт только для systemd-систем"
 command -v sysctl    >/dev/null || die "sysctl не найден"
 
-if ! systemctl list-unit-files | grep -q '^x-ui.service'; then
+# ИСПРАВЛЕНО: более надежная проверка наличия службы x-ui
+if ! systemctl show x-ui >/dev/null 2>&1; then
     die "x-ui.service не найден. Установлен ли 3x-ui? (systemctl status x-ui)"
 fi
 
